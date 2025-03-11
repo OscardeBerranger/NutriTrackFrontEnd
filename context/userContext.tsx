@@ -1,15 +1,26 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import {getStructuredUser, getUser, saveRegistrationInformation, userWhipeout} from '@/utils/userStorage';
+import React, {createContext, useState, useEffect, ReactNode, useContext} from 'react';
+import {
+    getStructuredUser,
+    getUser,
+    saveRegistrationInformation,
+    saveStructuredUser,
+    userWhipeout
+} from '@/utils/userStorage';
 import {structuredUserType, userRegistrationType} from '@/interface/userInterface';
+import {baseUrl} from "@/constants/globalVariable";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {AuthContext} from "@/context/authContext";
 
 interface UserContextType {
     userRegistrationInfo: userRegistrationType | null;
     saveUserRegistrationInfo: (user: userRegistrationType | null) => Promise<void>;
     getUserInfo: () => Promise<userRegistrationType | null>;
-    structuredUserInfo: structuredUserType | null;
     saveStructuredUserInfo: (structuredUser: structuredUserType | null) => Promise<void>;
+    fetchAnyUserData: (token: string,  path: string) => Promise<number | string | null>;
+    fetchUserInfo: (token: string) => Promise<void>;
     isLoading: boolean;
     whipeout: ()=>void;
+    structuredUserInfo: structuredUserType | null;
 }
 
 // Création du contexte avec une valeur par défaut
@@ -23,6 +34,13 @@ export function UserProvider({ children }: UserProviderProps) {
     const [userRegistrationInfo, setUserRegistrationInfo] = useState<userRegistrationType | null>(null);
     const [structuredUserInfo, setStructuredUserInfo] = useState<structuredUserType | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const auth = useContext(AuthContext);
+
+    if (!auth) {
+        return null;
+    }
+
+    const { logout, login } = auth
 
     useEffect(() => {
         async function checkUserStatus() {
@@ -35,7 +53,62 @@ export function UserProvider({ children }: UserProviderProps) {
     }, []);
 
     async function saveStructuredUserInfo(user: structuredUserType | null): Promise<void> {
-        setStructuredUserInfo(user);
+        await saveStructuredUser(user as structuredUserType);
+    }
+
+    async function fetchUserInfo(token: string){
+        let data = null
+        try {
+            fetch(`${baseUrl}/api/whoami`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            })
+                .then(res => {
+                    if (res.status === 401) {logout()}
+                    return res.json()
+                })
+                .then(data => {
+                    let usr: structuredUserType = {
+                        email: data.email,
+                        password: null,
+                        name: data.profile.name,
+                        surname: data.profile.surname,
+                        phoneNumber: data.profile.phoneNumber,
+                        gender_id: data.profile.gender.gender,
+                        height: data.profile.height,
+                        weight: data.profile.weight,
+                        birthDate: data.profile.birthDate,
+                        sportFrequecy:data.profile.sportFrequecy
+                    }
+                    saveStructuredUser(usr);
+            })
+        } catch (error) {
+            console.error("Erreur de connexion:", error);
+            throw error;
+        }
+    }
+
+    async function fetchAnyUserData(token: string, path: string): Promise<number | string | null>{
+        let calories: number | null = null
+        await fetch(`${baseUrl}${path}` , {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            })
+                .then(res => {
+                    if (res.status === 401) {logout()}
+                    return res.json()
+                })
+                .then(data => {
+                    calories = data
+                })
+
+        return calories
     }
 
     async function saveUserRegistrationInfo(user: userRegistrationType | null) {
@@ -58,7 +131,7 @@ export function UserProvider({ children }: UserProviderProps) {
     }
 
     return (
-        <UserContext.Provider value={{ userRegistrationInfo,structuredUserInfo, saveStructuredUserInfo ,getUserInfo ,saveUserRegistrationInfo, whipeout, isLoading }}>
+        <UserContext.Provider value={{ userRegistrationInfo,structuredUserInfo,fetchUserInfo, fetchAnyUserData ,saveStructuredUserInfo ,getUserInfo ,saveUserRegistrationInfo, whipeout, isLoading }}>
             {children}
         </UserContext.Provider>
     );
