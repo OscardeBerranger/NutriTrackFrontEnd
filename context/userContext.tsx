@@ -18,6 +18,7 @@ interface UserContextType {
     saveStructuredUserInfo: (structuredUser: structuredUserType | null) => Promise<void>;
     fetchAnyUserData: (token: string,  path: string) => Promise<number | string | null>;
     fetchUserInfo: (token: string) => Promise<void>;
+    addCalories: (token: string, calories: number) => Promise<void>;
     isLoading: boolean;
     whipeout: ()=>void;
     structuredUserInfo: structuredUserType | null;
@@ -92,7 +93,7 @@ export function UserProvider({ children }: UserProviderProps) {
     }
 
     async function fetchAnyUserData(token: string, path: string): Promise<number | string | null>{
-        let calories: number | null = null
+        let returnable: number | null = null
         await fetch(`${baseUrl}${path}` , {
                 method: 'GET',
                 headers: {
@@ -105,10 +106,32 @@ export function UserProvider({ children }: UserProviderProps) {
                     return res.json()
                 })
                 .then(data => {
-                    calories = data
+                    returnable = data
                 })
 
-        return calories
+        return returnable
+    }
+
+
+    async function addCalories(token: string, calories: number) {
+        try {
+
+            fetch(`${baseUrl}/api/calories/add`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(
+                    {
+                        "calories": calories
+                    }
+                ),
+            }).then()
+        } catch (error) {
+            console.error("Erreur de connexion:", error);
+            throw error;
+        }
     }
 
     async function saveUserRegistrationInfo(user: userRegistrationType | null) {
@@ -131,7 +154,7 @@ export function UserProvider({ children }: UserProviderProps) {
     }
 
     return (
-        <UserContext.Provider value={{ userRegistrationInfo,structuredUserInfo,fetchUserInfo, fetchAnyUserData ,saveStructuredUserInfo ,getUserInfo ,saveUserRegistrationInfo, whipeout, isLoading }}>
+        <UserContext.Provider value={{ userRegistrationInfo,structuredUserInfo,fetchUserInfo,addCalories ,fetchAnyUserData ,saveStructuredUserInfo ,getUserInfo ,saveUserRegistrationInfo, whipeout, isLoading }}>
             {children}
         </UserContext.Provider>
     );

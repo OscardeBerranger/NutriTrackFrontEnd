@@ -28,8 +28,6 @@ export default function HomeScreen() {
         router.push("/registration/login")
       }
       if (!isLoading){
-        console.log(userRegistrationInfo)
-        console.log(userToken)
         if (userRegistrationInfo.password){
           whipeout()
         }

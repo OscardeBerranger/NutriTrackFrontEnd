@@ -27,15 +27,12 @@ export default function profile() {
     }
 
     const { userToken, isLoading } = auth;
-    const { fetchAnyUserData, structuredUserInfo , whipeout , fetchUserInfo } = info;
+    const { fetchAnyUserData, structuredUserInfo , whipeout , fetchUserInfo , addCalories} = info;
 
     useEffect(() => {
-
         if (!isLoading && !userToken) {
             router.push("/registration/login")
         }
-
-
         if (!isLoading){
             if (!structuredUserInfo.name){
                 fetchUserInfo(userToken);
@@ -72,6 +69,13 @@ export default function profile() {
         })
     }
 
+    async function addCaloriesToUser(){
+        await addCalories(userToken , 100)
+            .then(res=>
+                retrieveUserConsumedCalories()
+            )
+    }
+
     return (
         <ParallaxScrollView
             headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -82,12 +86,12 @@ export default function profile() {
                 />
             }>
             <ThemedView style={styles.titleContainer}>
-                <ThemedText type="title">Salut {structuredUserInfo.name}
+                <ThemedText type="title">Salut
                 </ThemedText>
                 <HelloWave />
             </ThemedView>
             <ThemedView style={styles.stepContainer}>
-                <ThemedText type="subtitle">Aujourd'hui tu a besoin de consommer un total de {requiredCalories} calories
+                <ThemedText type="subtitle">Aujourd'hui tu a besoin de consommer un total de retiré pour l'instant calories
                 </ThemedText>
             </ThemedView>
             <ThemedView style={styles.stepContainer}>
@@ -95,9 +99,10 @@ export default function profile() {
                 </ThemedText>
             </ThemedView>
             <ThemedView style={styles.stepContainer}>
-                <ThemedText type="subtitle">Tu as donc consommé : {requiredCalories - consumedCalories} calories
+                <ThemedText type="subtitle">Tu as donc consommé :retiré ca casse tout calories
                 </ThemedText>
             </ThemedView>
+            <Button title={"Ajouter 100 calories parce que j'ai la flemme de faire un text input"} onPress={addCaloriesToUser} />
         </ParallaxScrollView>
 
     );
