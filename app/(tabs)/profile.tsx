@@ -6,8 +6,23 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import {useContext} from "react";
+import {AuthContext} from "@/context/authContext";
+import {HelloWave} from "@/components/HelloWave";
 
 export default function profile() {
+    const auth = useContext(AuthContext);
+    if (!auth) {
+        return (
+            <ThemedView style={styles.titleContainer}>
+                <ThemedText type="title">Erreure AuthContext non défini !</ThemedText>
+                <HelloWave />
+            </ThemedView>
+        )
+    }
+
+    const { userToken, logout, isLoading } = auth;
+
     return (
         <h1>truc</h1>
     );

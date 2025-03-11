@@ -1,44 +1,47 @@
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
-const TOKEN_KEY = 'userToken';
-const REFRESH_TOKEN_KEY = 'refreshToken';
+const isWeb = Platform.OS === 'web';
 
-// Sauvegarde du token
-export async function saveToken(token: string, refreshToken: string): Promise<void> {
+
+export const saveToken = async (token: string, refreshToken: string) => {
     try {
-        await AsyncStorage.setItem(TOKEN_KEY, token);
-        await AsyncStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+        if (isWeb) {
+            localStorage.setItem('userToken', token);
+            localStorage.setItem('refreshToken', refreshToken);
+        } else {
+            await SecureStore.setItemAsync('userToken', token);
+            await SecureStore.setItemAsync('refreshToken', refreshToken);
+        }
     } catch (error) {
-        console.error("Erreur lors de l'enregistrement du token :", error);
+        console.error('Erreur lors de la sauvegarde du token:', error);
     }
-}
+};
 
-// Récupération du token
-export async function getToken(): Promise<string | null> {
+export const getToken = async (): Promise<string | null> => {
     try {
-        return await AsyncStorage.getItem(TOKEN_KEY);
+        if (isWeb) {
+            return localStorage.getItem('userToken');
+        } else {
+            return await SecureStore.getItemAsync('userToken');
+        }
     } catch (error) {
-        console.error("Erreur lors de la récupération du token :", error);
+        console.error('Erreur lors de la récupération du token:', error);
         return null;
     }
-}
+};
 
-// Récupération du refresh token
-export async function getRefreshToken(): Promise<string | null> {
+export const clearTokens = async () => {
     try {
-        return await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+        if (isWeb) {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('refreshToken');
+        } else {
+            await SecureStore.deleteItemAsync('userToken');
+            await SecureStore.deleteItemAsync('refreshToken');
+        }
     } catch (error) {
-        console.error("Erreur lors de la récupération du refresh token :", error);
-        return null;
+        console.error('Erreur lors de la suppression des tokens:', error);
     }
-}
-
-// Suppression des tokens
-export async function clearTokens(): Promise<void> {
-    try {
-        await AsyncStorage.removeItem(TOKEN_KEY);
-        await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
-    } catch (error) {
-        console.error("Erreur lors de la suppression des tokens :", error);
-    }
-}
+};

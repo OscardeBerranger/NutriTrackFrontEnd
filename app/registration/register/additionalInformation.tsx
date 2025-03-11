@@ -1,4 +1,4 @@
-import {useState, useContext} from "react";
+import {useState, useContext, useEffect} from "react";
 import { StyleSheet, Image, Platform, View, Text, TextInput, Button, Alert } from 'react-native';
 import {ThemedText} from "@/components/ThemedText";
 import {ThemedView} from "@/components/ThemedView";
@@ -16,39 +16,49 @@ export default function additionalInformation() {
     const [sportfrequency, setSportfrequency] = useState("");
     const [gender, setGender] = useState("");
     const [birthDate, setBithDate] = useState("2003/12/17");
-
     if (!auth || !userContext) {
         return null
     }
 
-    const navigation = useNavigation();
     const { userInfo } = userContext;
-    const { register } = auth;
+    const { register , userToken} = auth;
     const { login } = auth
     const router = useRouter();
 
     console.log(userInfo)
+
     async function handleRegistration(){
+        if (!userInfo) {
+            router.navigate("/registration/register/register");
+            return;
+        }
         let structuredUser: structuredUserType = {
             "email": userInfo.email,
             "password": userInfo.password,
             "name": userInfo.name,
             "surname": userInfo.surname,
+            "phoneNumber": parseInt(userInfo.phoneNumber),
             "gender_id": parseInt(gender),
             "height": parseInt(height),
             "weight": parseInt(weight),
             "birthDate": birthDate,
             "sportFrequecy": parseInt(sportfrequency)
         }
-        console.log(structuredUser);
         try{
+            if (!userInfo){
+                router.navigate("/registration/register/register");
+            }
             await register(structuredUser)
-                .then(async (res) => {
-                    await login(structuredUser.email, userInfo.password);
-                    router.navigate("/")
+                .then(async (res: any) => {
+                    try {
+                        await login(structuredUser.email, structuredUser.password);
+                        if (userToken) {
+                            router.replace("/");
+                        }
+                    } catch (error: any) {
+                        Alert.alert('Erreur', error.message);
+                    }
                 })
-
-
         }catch(error){
             console.log(error)
         }

@@ -12,6 +12,7 @@ export interface structuredUserType {
     "password": string;
     "name": string;
     "surname": string;
+    "phoneNumber": number;
     "gender_id": number;
     "height": number;
     "weight": number;

@@ -1,20 +1,19 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { getToken, saveToken, clearTokens } from '@/utils/authStorage';
-import {baseUrl} from '@/constants/globalVariable'
-import {structuredUserType, userType} from "@/interface/userInterface";
-// Définition du type pour le contexte
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {baseUrl} from "@/constants/globalVariable";
+import {structuredUserType} from "@/interface/userInterface";
+import {saveUser} from "@/utils/userStorage";
+
 interface AuthContextType {
     userToken: string | null;
     login: (email: string, password: string) => Promise<void>;
-    register: (user: structuredUserType) => Promise<void>;
     logout: () => Promise<void>;
     isLoading: boolean;
+    register: (user: structuredUserType) => Promise<void>;
 }
 
-// Création du contexte avec une valeur par défaut
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Définition des props du AuthProvider
 interface AuthProviderProps {
     children: ReactNode;
 }
@@ -24,18 +23,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        async function checkLoginStatus() {
-            const token = await getToken();
-            setUserToken(token);
-            setIsLoading(false);
+        async function loadTokenFromStorage() {
+            try {
+                const token = await AsyncStorage.getItem("userToken");
+                setUserToken(token);
+            } catch (error) {
+                console.error("Erreur lors du chargement du token:", error);
+            } finally {
+                setIsLoading(false);
+            }
         }
-        checkLoginStatus();
+        loadTokenFromStorage();
     }, []);
 
-    // Fonction de connexion
     async function login(email: string, password: string) {
         try {
-            const response = await fetch(`${baseUrl}/api/login_check`, {
+            // Remplace ceci par un appel API réel
+            let token = "real_token_from_api_" + email;
+
+            fetch(`${baseUrl}/api/login_check`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(
@@ -44,18 +50,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
                         "password": password
                     }
                 ),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                await saveToken(data.token, data.refreshToken);
-                setUserToken(data.token);
-            } else {
-                throw new Error(data.message || 'Échec de connexion');
-            }
+            }).then(res => res.json()).then(data => {
+                token = data.token;
+            }).then(data => {
+                AsyncStorage.setItem("userToken", token);
+                setUserToken(token);
+            })
         } catch (error) {
-            console.error('Erreur de connexion:', error);
+            console.error("Erreur de connexion:", error);
             throw error;
         }
     }
@@ -71,6 +73,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                         "password": user.password,
                         "name": user.name,
                         "surname": user.surname,
+                        "phoneNumber": user.phoneNumber,
                         "gender_id": user.gender_id,
                         "height": user.height,
                         "weight": user.weight,
@@ -93,14 +96,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
     }
 
-    // Fonction de déconnexion
+
     async function logout() {
-        await clearTokens();
+        await AsyncStorage.removeItem("userToken");
         setUserToken(null);
     }
 
     return (
-        <AuthContext.Provider value={{ userToken, register, login, logout, isLoading }}>
+        <AuthContext.Provider value={{ userToken, login, logout,register, isLoading }}>
             {children}
         </AuthContext.Provider>
     );
