@@ -6,7 +6,7 @@ import {UserContext} from "@/context/userContext";
 import {useNavigation} from "@react-navigation/native"
 import {Redirect, useRouter} from "expo-router";
 
-interface user {
+interface userRegistrationType {
     name: string;
     surname: string;
     email: string;
@@ -20,14 +20,14 @@ export default function register() {
         return null;
     }
     const navigation = useNavigation();
-    let user: user
+    let user: userRegistrationType
     const [password, setPassword] = useState<string>("");
     const [email, setEmail] = useState<string>("");
     const [name, setName] = useState<string>("");
     const [phoneNumber, setPhoneNumber] = useState<string>("");
     const [surName, setSurName] = useState<string>("");
 
-    let {saveUserInfo} = userContext;
+    let {saveUserRegistrationInfo} = userContext;
     const router = useRouter();
 
     function handleRedirect() {
@@ -35,7 +35,7 @@ export default function register() {
     }
 
     async function handleClick(){
-        await saveUserInfo(null);
+        await saveUserRegistrationInfo(null);
         user = {
             name: name,
             surname: surName,
@@ -44,7 +44,7 @@ export default function register() {
             password: password
         }
         if (user.name !== null && user.surname !== null && user.phoneNumber !== null && user.email !== null) {
-            await saveUserInfo(user)
+            await saveUserRegistrationInfo(user)
             router.navigate("/registration/register/additionalInformation")
         }
         else{

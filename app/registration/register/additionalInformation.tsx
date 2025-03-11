@@ -1,12 +1,10 @@
-import {useState, useContext, useEffect} from "react";
-import { StyleSheet, Image, Platform, View, Text, TextInput, Button, Alert } from 'react-native';
-import {ThemedText} from "@/components/ThemedText";
+import {useState, useContext} from "react";
+import { StyleSheet, Text, TextInput, Button, Alert } from 'react-native';
 import {ThemedView} from "@/components/ThemedView";
 import {AuthContext} from "@/context/authContext";
-import {useNavigation} from "@react-navigation/native"
-import {Redirect, useRouter} from "expo-router";
+import {useRouter} from "expo-router";
 import {UserContext} from "@/context/userContext";
-import { userType, structuredUserType } from "@/interface/userInterface";
+import { structuredUserType } from "@/interface/userInterface";
 
 export default function additionalInformation() {
     const auth = useContext(AuthContext);
@@ -20,24 +18,24 @@ export default function additionalInformation() {
         return null
     }
 
-    const { userInfo } = userContext;
+    const { userRegistrationInfo, whipeout } = userContext;
     const { register , userToken} = auth;
     const { login } = auth
     const router = useRouter();
 
-    console.log(userInfo)
+    console.log(userRegistrationInfo)
 
     async function handleRegistration(){
-        if (!userInfo) {
+        if (!userRegistrationInfo) {
             router.navigate("/registration/register/register");
             return;
         }
         let structuredUser: structuredUserType = {
-            "email": userInfo.email,
-            "password": userInfo.password,
-            "name": userInfo.name,
-            "surname": userInfo.surname,
-            "phoneNumber": parseInt(userInfo.phoneNumber),
+            "email": userRegistrationInfo.email,
+            "password": userRegistrationInfo.password,
+            "name": userRegistrationInfo.name,
+            "surname": userRegistrationInfo.surname,
+            "phoneNumber": parseInt(userRegistrationInfo.phoneNumber as string),
             "gender_id": parseInt(gender),
             "height": parseInt(height),
             "weight": parseInt(weight),
@@ -45,14 +43,15 @@ export default function additionalInformation() {
             "sportFrequecy": parseInt(sportfrequency)
         }
         try{
-            if (!userInfo){
+            if (!userRegistrationInfo){
                 router.navigate("/registration/register/register");
             }
             await register(structuredUser)
                 .then(async (res: any) => {
                     try {
-                        await login(structuredUser.email, structuredUser.password);
+                        await login(structuredUser.email as string, structuredUser.password as string);
                         if (userToken) {
+                            await whipeout();
                             router.replace("/");
                         }
                     } catch (error: any) {

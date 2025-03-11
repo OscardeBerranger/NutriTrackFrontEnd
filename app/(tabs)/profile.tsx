@@ -1,17 +1,17 @@
-import { StyleSheet, Image, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import {useContext} from "react";
+import {useContext, useEffect} from "react";
 import {AuthContext} from "@/context/authContext";
 import {HelloWave} from "@/components/HelloWave";
+import {useRouter} from "expo-router";
+import {UserContext} from "@/context/userContext";
 
 export default function profile() {
     const auth = useContext(AuthContext);
+    const info = useContext(UserContext);
+    const router = useRouter()
     if (!auth) {
         return (
             <ThemedView style={styles.titleContainer}>
@@ -23,6 +23,13 @@ export default function profile() {
 
     const { userToken, logout, isLoading } = auth;
 
+    useEffect(() => {
+        if (!isLoading && !userToken) {
+            router.push("/registration/login")
+        }
+        if (!isLoading){
+        }
+    })
     return (
         <h1>truc</h1>
     );

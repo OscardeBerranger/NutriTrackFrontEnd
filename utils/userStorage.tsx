@@ -1,13 +1,31 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {userType} from '@/interface/userInterface'
+import {userRegistrationType} from '@/interface/userInterface'
 import {structuredUserType} from "@/interface/userInterface";
 
 const KEY = 'userData';
 const STRUCTURED_KEY = 'structuredUserData';
 
+const emptyUser: userRegistrationType = {
+    name: null,
+    surname: null,
+    email: null,
+    phoneNumber: null,
+    password: null
+}
+const emptyStructuredUser: structuredUserType = {
+    email: null,
+    password: null,
+    name: null,
+    surname: null,
+    phoneNumber: null,
+    gender_id: null,
+    height: null,
+    weight: null,
+    birthDate: null,
+    sportFrequecy: null
+}
 
-// Sauvegarde du token
-export async function saveUser(user: userType): Promise<void> {
+export async function saveRegistrationInformation(user: userRegistrationType): Promise<void> {
     try {
         await AsyncStorage.setItem(KEY, JSON.stringify(user));
     } catch (error) {
@@ -23,10 +41,19 @@ export async function saveStructuredUser(structuredUser: structuredUserType): Pr
     }
 }
 
-export async function getUser(): Promise<userType | null> {
+export async function userWhipeout(): Promise<void> {
+    try {
+        await AsyncStorage.setItem(KEY, JSON.stringify(emptyUser));
+        await AsyncStorage.setItem(STRUCTURED_KEY, JSON.stringify(emptyStructuredUser));
+    }catch(error){
+        console.log(error)
+    }
+}
+
+export async function getUser(): Promise<userRegistrationType | null> {
     try {
         let data = await AsyncStorage.getItem(KEY);
-        return await JSON.parse(data as string) as userType
+        return await JSON.parse(data as string) as userRegistrationType
     } catch (error) {
         console.error("Erreur lors de la récupération du token :", error);
         return null;

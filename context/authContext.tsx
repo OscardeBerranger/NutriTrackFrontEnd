@@ -2,7 +2,6 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {baseUrl} from "@/constants/globalVariable";
 import {structuredUserType} from "@/interface/userInterface";
-import {saveUser} from "@/utils/userStorage";
 
 interface AuthContextType {
     userToken: string | null;
@@ -33,7 +32,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 setIsLoading(false);
             }
         }
-        loadTokenFromStorage();
+        loadTokenFromStorage()
     }, []);
 
     async function login(email: string, password: string) {
@@ -52,7 +51,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 ),
             }).then(res => res.json()).then(data => {
                 token = data.token;
-            }).then(data => {
+            }).then(() => {
                 AsyncStorage.setItem("userToken", token);
                 setUserToken(token);
             })
@@ -103,7 +102,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     return (
-        <AuthContext.Provider value={{ userToken, login, logout,register, isLoading }}>
+        <AuthContext.Provider value={{ userToken, login, logout,register , isLoading }}>
             {children}
         </AuthContext.Provider>
     );

@@ -11,9 +11,8 @@ import {UserContext} from "@/context/userContext";
 
 export default function HomeScreen() {
   const auth = useContext(AuthContext);
-  const info = useContext(UserContext);
   const router = useRouter();
-
+  const info = useContext(UserContext);
   if (!auth) {
     return (
     <ThemedView style={styles.titleContainer}>
@@ -22,13 +21,18 @@ export default function HomeScreen() {
     </ThemedView>
     )
   }
-
+  const { userRegistrationInfo, whipeout } = info;
   const { userToken, logout, isLoading } = auth;
-
-
   useEffect(() => {
       if (!isLoading && !userToken) {
         router.push("/registration/login")
+      }
+      if (!isLoading){
+        console.log(userRegistrationInfo)
+        console.log(userToken)
+        if (userRegistrationInfo.password){
+          whipeout()
+        }
       }
     }, [userToken, isLoading]);
 
