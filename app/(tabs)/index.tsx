@@ -1,130 +1,160 @@
-import {Image, StyleSheet, Platform, Button, ActivityIndicator} from 'react-native';
+import { ActivityIndicator, Button, Image, FlatList, StyleSheet } from "react-native";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { AuthContext } from "@/context/authContext";
+import { HelloWave } from "@/components/HelloWave";
+import { useRouter } from "expo-router";
+import { UserContext } from "@/context/userContext";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import {AuthContext} from "@/context/authContext";
-import {useContext, useEffect, useState} from "react";
-import {useRouter} from "expo-router";
-import {UserContext} from "@/context/userContext";
+// Import de l'interface `productType`
 import productType from "@/interface/productInterface";
+import {baseUrl} from "@/constants/globalVariable";
 
-export default function HomeScreen() {
+export default function PlatesPage() {
   const auth = useContext(AuthContext);
+  const userInfo = useContext(UserContext);
   const router = useRouter();
-  const info = useContext(UserContext);
-  const [products, setProducts] = useState<productType[]>();
 
+  const [plates, setPlates] = useState<productType[]>([]); // Utilisation de `productType` directement
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-
-
-  if (!auth) {
-    return (
-    <ThemedView style={styles.titleContainer}>
-      <ThemedText type="title">Erreure AuthContext non défini !</ThemedText>
-      <HelloWave />
-    </ThemedView>
-    )
-  }
-  if (!info) {
+  if (!auth || !userInfo) {
     return (
         <ThemedView style={styles.titleContainer}>
-          <ThemedText type="title">Erreure AuthContext non défini !</ThemedText>
+          <ThemedText type="title">Erreur : Contexte non défini !</ThemedText>
           <HelloWave />
         </ThemedView>
-    )
+    );
   }
-  const { userRegistrationInfo, whipeout } = info;
-  const { userToken, logout, isLoading } = auth;
 
+  const { userToken, isLoading: authLoading } = auth;
 
-  useEffect(() => {
-      if (!isLoading && !userToken) {
-        router.push("/registration/login")
-      }
-      if (!isLoading){
-        if (userRegistrationInfo){
-          if (userRegistrationInfo.password){
-            whipeout()
+  function addToCart(string: number) {
+    console.log(string);
+  }
+
+  // Fonction pour récupérer les plats depuis l'API
+  const fetchPlates = useCallback(async () => {
+    try {
+      const response = await fetch(`${baseUrl}/api/product/all`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${userToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      // Formatage des données selon l'interface `productType`
+      const formattedPlates: productType[] = data.map((plate: any) => ({
+        id: plate.id,
+        name: plate.name,
+        calories: plate.calories,
+        price: plate.price,
+        origin: plate.origin,
+        ingredients: plate.ingredients.map((ingredient: any) => ({
+          id: ingredient.id,
+          name: ingredient.name
+        })),
+        restaurant: {
+          id: plate.restaurant.id,
+          address: {
+            streetNumber: plate.restaurant.Address.streetNumber,
+            street: plate.restaurant.Address.street,
+            zipcode: plate.restaurant.Address.zipcode,
+            city: plate.restaurant.Address.city,
+            country: plate.restaurant.Address.country
           }
         }
-      }
-    }, [userToken, isLoading]);
-
-    if (isLoading) {
-      return <ActivityIndicator size="large" color="#0000ff" />;
+      }));
+      console.log(formattedPlates);
+      setPlates(formattedPlates);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des plats:", error);
+      setIsLoading(false);
     }
+  }, [userToken]);
 
-
-    function handleLogout() {
-      whipeout()
-      logout();
+  useEffect(() => {
+    if (!authLoading) {
+      fetchPlates();
     }
-    return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+  }, [authLoading, fetchPlates]);
+
+  if (isLoading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
+
+  // Affichage d'un plat dans une carte
+  const renderPlate = ({ item }: { item: productType }) => (
+      <ThemedView style={styles.plateCard}>
+        <ThemedText type="subtitle">{item.name}</ThemedText>
+        <ThemedText>{item.origin}</ThemedText>
+        <ThemedText>Restaurant: {item.restaurant.address.street}, {item.restaurant.address.city}</ThemedText>
+        <ThemedText>Calories: {item.calories}</ThemedText>
+        <ThemedText>Price: ${item.price}</ThemedText>
+        <ThemedText>Ingredients: {item.ingredients.map(i => i.name).join(", ")}</ThemedText>
+        <Button title="Ajouter aux repas" onPress={() => addToCart(item.id)} />
+      </ThemedView>
+  );
+
+  return (
+      <ParallaxScrollView
+          headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
+          headerImage={
+            <Image source={require("@/assets/images/partial-react-logo.png")} style={styles.reactLogo} />
+          }
+      >
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type="title">Plats Disponibles</ThemedText>
+          <HelloWave />
+        </ThemedView>
+
+        <FlatList
+            data={plates}
+            renderItem={renderPlate}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.platesList}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-      <Button title={"Logout"} onPress={handleLogout} />
-    </ParallaxScrollView>
-    );
+      </ParallaxScrollView>
+  );
 }
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
+    marginBottom: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  plateCard: {
+    padding: 15,
+    backgroundColor: "#000",
+    borderRadius: 8,
+    marginBottom: 20,
+    shadowColor: "#fff",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+  },
+  plateImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  platesList: {
+    paddingBottom: 50,
   },
   reactLogo: {
     height: 178,
     width: 290,
     bottom: 0,
     left: 0,
-    position: 'absolute',
+    position: "absolute",
   },
 });
