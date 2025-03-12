@@ -5,14 +5,20 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import {AuthContext} from "@/context/authContext";
-import {useContext, useEffect} from "react";
+import {useContext, useEffect, useState} from "react";
 import {useRouter} from "expo-router";
 import {UserContext} from "@/context/userContext";
+import productType from "@/interface/productInterface";
 
 export default function HomeScreen() {
   const auth = useContext(AuthContext);
   const router = useRouter();
   const info = useContext(UserContext);
+  const [products, setProducts] = useState<productType[]>();
+
+
+
+
   if (!auth) {
     return (
     <ThemedView style={styles.titleContainer}>
@@ -21,15 +27,27 @@ export default function HomeScreen() {
     </ThemedView>
     )
   }
+  if (!info) {
+    return (
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type="title">Erreure AuthContext non défini !</ThemedText>
+          <HelloWave />
+        </ThemedView>
+    )
+  }
   const { userRegistrationInfo, whipeout } = info;
   const { userToken, logout, isLoading } = auth;
+
+
   useEffect(() => {
       if (!isLoading && !userToken) {
         router.push("/registration/login")
       }
       if (!isLoading){
-        if (userRegistrationInfo.password){
-          whipeout()
+        if (userRegistrationInfo){
+          if (userRegistrationInfo.password){
+            whipeout()
+          }
         }
       }
     }, [userToken, isLoading]);
@@ -39,6 +57,10 @@ export default function HomeScreen() {
     }
 
 
+    function handleLogout() {
+      whipeout()
+      logout();
+    }
     return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -83,7 +105,7 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
       </ThemedView>
-      <Button title={"Logout"} onPress={logout} />
+      <Button title={"Logout"} onPress={handleLogout} />
     </ParallaxScrollView>
     );
 }

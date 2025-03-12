@@ -1,7 +1,8 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, {createContext, useState, useEffect, ReactNode, useContext} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {baseUrl} from "@/constants/globalVariable";
 import {structuredUserType} from "@/interface/userInterface";
+import {UserContext} from "@/context/userContext";
 
 interface AuthContextType {
     userToken: string | null;
