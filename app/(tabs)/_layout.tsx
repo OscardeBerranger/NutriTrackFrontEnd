@@ -41,6 +41,13 @@ export default function TabLayout() {
                   tabBarIcon: ({ color }) => <AntDesign name="user" size={24} color={color} />,
               }}
           />
+          <Tabs.Screen
+              name="stats"
+              options={{
+                  title: 'Stats',
+                  tabBarIcon: ({ color }) => <AntDesign name="user" size={24} color={color} />,
+              }}
+          />
       </Tabs>
   );
 }

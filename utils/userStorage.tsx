@@ -1,15 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {userRegistrationType} from '@/interface/userInterface'
 import {structuredUserType} from "@/interface/userInterface";
+import {Platform} from "react-native";
 
 const KEY = 'userData';
 const STRUCTURED_KEY = 'structuredUserData';
+const PROFILE_ID_KEY = 'profileId';
+const isWeb = Platform.OS === 'web';
 
 const emptyUser: userRegistrationType = {
-    name: null,
-    surname: null,
     email: null,
-    phoneNumber: null,
     password: null
 }
 const emptyStructuredUser: structuredUserType = {
@@ -66,6 +66,19 @@ export async function getStructuredUser(): Promise<structuredUserType | null> {
         return await JSON.parse(data as string) as structuredUserType
     } catch (error) {
         console.error("Erreur lors de la récupération du token :", error);
+        return null;
+    }
+}
+
+export async function getUserProfileId(){
+    try {
+        if (isWeb){
+            return localStorage.getItem(PROFILE_ID_KEY);
+        }else{
+            return await AsyncStorage.getItem(PROFILE_ID_KEY);
+        }
+    }catch(error){
+        console.log(error)
         return null;
     }
 }

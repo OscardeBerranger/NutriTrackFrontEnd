@@ -18,8 +18,6 @@ export default function Profile() {
         return null
     }
 
-
-
     const { userRegistrationInfo } = userContext;
     const { register , userToken} = auth;
     const { userProfileId } = auth

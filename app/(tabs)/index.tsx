@@ -8,10 +8,10 @@ import { useRouter } from "expo-router";
 import { UserContext } from "@/context/userContext";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 
-// Import de l'interface `productType`
 import productType from "@/interface/productInterface";
 import {baseUrl} from "@/constants/globalVariable";
 import {FoodContext} from "@/context/foodContext";
+import ingredientType from "@/interface/ingredientInterface";
 
 export default function PlatesPage() {
   const auth = useContext(AuthContext);
@@ -34,11 +34,11 @@ export default function PlatesPage() {
   const { logout, userToken, isLoading: authLoading } = auth;
   const { addProductToCart } = foodContext;
   const { structuredUserInfo } = userInfo;
+
+
   async function handleAddToCartClick(product: productType) {
-    console.log("handler reached")
     await addProductToCart(product);
   }
-  console.log(structuredUserInfo)
 
   // Fonction pour récupérer les plats depuis l'API
   const fetchPlates = useCallback(async () => {
@@ -50,7 +50,9 @@ export default function PlatesPage() {
           'Content-Type': 'application/json',
         },
       });
-
+      if (response.status === 401){
+        router.push("/registration/login")
+      }
       const data = await response.json();
 
       // Formatage des données selon l'interface `productType`
@@ -86,6 +88,9 @@ export default function PlatesPage() {
 
   useEffect(() => {
     if (!authLoading) {
+      if (!userToken || userToken === "" || userToken === null) {
+        router.push("/registration/login");
+      }
       fetchPlates();
     }
   }, [authLoading, fetchPlates]);
@@ -93,6 +98,7 @@ export default function PlatesPage() {
   if (isLoading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
   }
+  
 
   // Affichage d'un plat dans une carte
   const renderPlate = ({ item }: { item: productType }) => (
@@ -100,6 +106,7 @@ export default function PlatesPage() {
         <Button title={"logout"} onPress={logout} />
         <ThemedText type="subtitle">{item.name}</ThemedText>
         <ThemedText>{item.origin}</ThemedText>
+        <ThemedText>Restaurant</ThemedText>
         <ThemedText>Restaurant: {item.restaurant.address.street}, {item.restaurant.address.city}</ThemedText>
         <ThemedText>Calories: {item.calories}</ThemedText>
         <ThemedText>Price: ${item.price}</ThemedText>
@@ -107,6 +114,8 @@ export default function PlatesPage() {
         <Button title="Ajouter aux repas" onPress={() => handleAddToCartClick(item)} />
       </ThemedView>
   );
+
+
 
   return (
       <ParallaxScrollView

@@ -1,8 +1,5 @@
 export interface userRegistrationType {
-    name: string | null;
-    surname: string | null;
     email: string | null;
-    phoneNumber: string | null;
     password: string | null;
 }
 

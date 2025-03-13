@@ -14,9 +14,9 @@ export default function Login() {
 
     if (!auth || !user) return null;
 
-    const { userToken, login, isLoading } = auth;
+    const { userToken, loginRedirect, isLoading } = auth;
     const { whipeout } = user;
-    // Redirige automatiquement si déjà connecté
+
     useEffect(() => {
         if (!isLoading && userToken) {
             router.replace("/");
@@ -25,17 +25,18 @@ export default function Login() {
 
     async function handleLogin() {
         try {
-            await login(email, password);
+            loginRedirect(email, password)
             if (userToken) {
                 router.replace("/");
             }
+
         } catch (error: any) {
             Alert.alert('Erreur', error.message);
         }
     }
 
     function handleClick(){
-        router.push('/registration/register/register');
+        router.push('/registration/register');
     }
 
     return (

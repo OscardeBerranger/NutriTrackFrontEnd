@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, ReactNode, useContext, useCallback } from 'react';
 import {
     getStructuredUser,
-    getUser,
+    getUser, getUserProfileId,
     saveRegistrationInformation,
     saveStructuredUser,
     userWhipeout
@@ -15,6 +15,7 @@ interface UserContextType {
     userRegistrationInfo: userRegistrationType | null;
     structuredUserInfo: structuredUserType | null;
     isLoading: boolean;
+    userProfileId: string | null;
     saveUserRegistrationInfo: (user: userRegistrationType | null) => Promise<void>;
     getUserInfo: () => Promise<userRegistrationType | null>;
     saveStructuredUserInfo: (structuredUser: structuredUserType) => Promise<void>;
@@ -35,7 +36,9 @@ export function UserProvider({ children }: UserProviderProps) {
     const [userRegistrationInfo, setUserRegistrationInfo] = useState<userRegistrationType | null>(null);
     const [structuredUserInfo, setStructuredUserInfo] = useState<structuredUserType | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [userProfileId, setUserProfileId] = useState<string | null>(null);
     const auth = useContext(AuthContext);
+    const unredistered: string = "not registered yet"
 
     if (!auth) return null;
 
@@ -48,6 +51,8 @@ export function UserProvider({ children }: UserProviderProps) {
                 const user = await getUser();
                 setUserRegistrationInfo(user);
                 setStructuredUserInfo(await getStructuredUser());
+                const userProfile = await getUserProfileId();
+                setUserProfileId(userProfile);
             } catch (error) {
                 console.error("Erreur lors du chargement des utilisateurs:", error);
             } finally {
@@ -58,9 +63,11 @@ export function UserProvider({ children }: UserProviderProps) {
     }, []);
 
     const saveStructuredUserInfo = async (user: structuredUserType): Promise<void> => {
-        await saveStructuredUser(user);
-        setStructuredUserInfo(user);
+        saveStructuredUser(user).then(()=>{
+            setStructuredUserInfo(user);
+        })
     };
+
 
     const fetchUserInfo = useCallback(async (token: string | null): Promise<void> => {
         if (!token) return;
@@ -197,7 +204,8 @@ export function UserProvider({ children }: UserProviderProps) {
             getUserInfo,
             saveUserRegistrationInfo,
             whipeout,
-            isLoading
+            isLoading,
+            userProfileId
         }}>
             {children}
         </UserContext.Provider>

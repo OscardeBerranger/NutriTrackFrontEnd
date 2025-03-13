@@ -2,9 +2,8 @@ import {useState, useContext} from "react";
 import { StyleSheet, Text, TextInput, Button, Alert } from 'react-native';
 import {ThemedView} from "@/components/ThemedView";
 import {AuthContext} from "@/context/authContext";
-import {useRouter} from "expo-router";
 import {UserContext} from "@/context/userContext";
-import { structuredUserType } from "@/interface/userInterface";
+import {useRouter} from "expo-router";
 
 export default function additionalInformation() {
     const auth = useContext(AuthContext);
@@ -14,54 +13,24 @@ export default function additionalInformation() {
     const [sportfrequency, setSportfrequency] = useState("");
     const [gender, setGender] = useState("");
     const [birthDate, setBithDate] = useState("2003/12/17");
+    const router = useRouter();
     if (!auth || !userContext) {
         return null
     }
 
-    const { userRegistrationInfo, whipeout } = userContext;
+    const { userRegistrationInfo } = userContext;
     const { register , userToken} = auth;
-    const { login } = auth
-    const router = useRouter();
-
-    console.log(userRegistrationInfo)
+    const { userProfileId } = auth
 
     async function handleRegistration(){
-        if (!userRegistrationInfo) {
-            router.navigate("/registration/register/register");
+        if (!userToken || !userProfileId) {
+            //router.navigate("/registration/login");
             return;
         }
-        let structuredUser: structuredUserType = {
-            "email": userRegistrationInfo.email,
-            "password": userRegistrationInfo.password,
-            "name": userRegistrationInfo.name,
-            "surname": userRegistrationInfo.surname,
-            "phoneNumber": parseInt(userRegistrationInfo.phoneNumber as string),
-            "gender_id": parseInt(gender),
-            "height": parseInt(height),
-            "weight": parseInt(weight),
-            "birthDate": birthDate,
-            "sportFrequecy": parseInt(sportfrequency)
-        }
-        try{
-            if (!userRegistrationInfo){
-                router.navigate("/registration/register/register");
-            }
-            await register(structuredUser)
-                .then(async (res: any) => {
-                    try {
-                        await login(structuredUser.email as string, structuredUser.password as string);
-                        if (userToken) {
-                            await whipeout();
-                            router.replace("/");
-                        }
-                    } catch (error: any) {
-                        Alert.alert('Erreur', error.message);
-                    }
-                })
-        }catch(error){
-            console.log(error)
-        }
+        
     }
+
+    console.log("Passed here at last")
 
     return (
         <ThemedView style={styles.titleContainer}>
