@@ -11,16 +11,18 @@ import ParallaxScrollView from "@/components/ParallaxScrollView";
 // Import de l'interface `productType`
 import productType from "@/interface/productInterface";
 import {baseUrl} from "@/constants/globalVariable";
+import {FoodContext} from "@/context/foodContext";
 
 export default function PlatesPage() {
   const auth = useContext(AuthContext);
   const userInfo = useContext(UserContext);
+  const foodContext = useContext(FoodContext);
   const router = useRouter();
 
   const [plates, setPlates] = useState<productType[]>([]); // Utilisation de `productType` directement
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  if (!auth || !userInfo) {
+  if (!auth || !userInfo || !foodContext) {
     return (
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Erreur : Contexte non défini !</ThemedText>
@@ -29,11 +31,14 @@ export default function PlatesPage() {
     );
   }
 
-  const { userToken, isLoading: authLoading } = auth;
-
-  function addToCart(string: number) {
-    console.log(string);
+  const { logout, userToken, isLoading: authLoading } = auth;
+  const { addProductToCart } = foodContext;
+  const { structuredUserInfo } = userInfo;
+  async function handleAddToCartClick(product: productType) {
+    console.log("handler reached")
+    await addProductToCart(product);
   }
+  console.log(structuredUserInfo)
 
   // Fonction pour récupérer les plats depuis l'API
   const fetchPlates = useCallback(async () => {
@@ -92,13 +97,14 @@ export default function PlatesPage() {
   // Affichage d'un plat dans une carte
   const renderPlate = ({ item }: { item: productType }) => (
       <ThemedView style={styles.plateCard}>
+        <Button title={"logout"} onPress={logout} />
         <ThemedText type="subtitle">{item.name}</ThemedText>
         <ThemedText>{item.origin}</ThemedText>
         <ThemedText>Restaurant: {item.restaurant.address.street}, {item.restaurant.address.city}</ThemedText>
         <ThemedText>Calories: {item.calories}</ThemedText>
         <ThemedText>Price: ${item.price}</ThemedText>
         <ThemedText>Ingredients: {item.ingredients.map(i => i.name).join(", ")}</ThemedText>
-        <Button title="Ajouter aux repas" onPress={() => addToCart(item.id)} />
+        <Button title="Ajouter aux repas" onPress={() => handleAddToCartClick(item)} />
       </ThemedView>
   );
 

@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import {AuthProvider} from "@/context/authContext";
 import {UserProvider} from "@/context/userContext";
+import {FoodProvider} from "@/context/foodContext";
 
 // Prevent the splash screens from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -30,6 +31,7 @@ export default function RootLayout() {
   }
 
   return (
+      <FoodProvider>
         <AuthProvider>
           <UserProvider>
             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
@@ -41,5 +43,6 @@ export default function RootLayout() {
             </ThemeProvider>
           </UserProvider>
         </AuthProvider>
+      </FoodProvider>
   );
 }

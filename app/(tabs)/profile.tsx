@@ -18,6 +18,7 @@ export default function Profile() {
     const isFirstRender = useRef(true); // Empêche useEffect de boucler au montage
 
     if (!auth || !userInfo) {
+        console.log(userInfo);
         return (
             <ThemedView style={styles.titleContainer}>
                 <ThemedText type="title">Erreur : Contexte non défini !</ThemedText>
@@ -26,8 +27,13 @@ export default function Profile() {
         );
     }
 
-    const { userToken, isLoading } = auth;
+    const { userToken,logout , isLoading } = auth;
     const { fetchAnyUserData, structuredUserInfo, whipeout, fetchUserInfo, addCalories } = userInfo;
+    console.log(structuredUserInfo);
+
+    if (!structuredUserInfo?.weight || !structuredUserInfo?.height || !structuredUserInfo.gender_id) {
+        console.log("missing datas")
+    }
 
     const retrieveUserCalories = useCallback(async () => {
         if (requiredCalories !== null) return; // Empêche de refaire l'appel si déjà chargé
@@ -113,7 +119,7 @@ export default function Profile() {
                     Tu as déjà consommé {consumedCalories}  calories.
                 </ThemedText>
             </ThemedView>
-
+            <Button title={"Logout"} onPress={logout} />
             <Button title="Ajouter 100 calories" onPress={addCaloriesToUser} />
         </ParallaxScrollView>
     );

@@ -1,4 +1,4 @@
-import {useState, useContext} from "react";
+import {useState, useContext, useEffect} from "react";
 import { StyleSheet, Image, Platform, View, Text, TextInput, Button, Alert } from 'react-native';
 import {ThemedText} from "@/components/ThemedText";
 import {ThemedView} from "@/components/ThemedView";
@@ -27,9 +27,8 @@ export default function register() {
     const [phoneNumber, setPhoneNumber] = useState<string>("");
     const [surName, setSurName] = useState<string>("");
 
-    let {saveUserRegistrationInfo} = userContext;
+    let {saveUserRegistrationInfo, whipeout} = userContext;
     const router = useRouter();
-
     function handleRedirect() {
         router.push("/registration/login");
     }

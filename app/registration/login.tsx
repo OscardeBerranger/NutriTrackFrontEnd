@@ -3,17 +3,19 @@ import { StyleSheet, Text, TextInput, Button, Alert } from 'react-native';
 import { ThemedView } from "@/components/ThemedView";
 import { AuthContext } from "@/context/authContext";
 import { useRouter } from "expo-router";
+import {UserContext} from "@/context/userContext";
 
 export default function Login() {
     const auth = useContext(AuthContext);
+    const user = useContext(UserContext);
     const router = useRouter();
     const [password, setPassword] = useState<string>("");
     const [email, setEmail] = useState<string>("");
 
-    if (!auth) return null;
+    if (!auth || !user) return null;
 
     const { userToken, login, isLoading } = auth;
-
+    const { whipeout } = user;
     // Redirige automatiquement si déjà connecté
     useEffect(() => {
         if (!isLoading && userToken) {

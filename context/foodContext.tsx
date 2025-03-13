@@ -1,9 +1,13 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {baseUrl} from "@/constants/globalVariable";
-import {structuredUserType} from "@/interface/userInterface";
+import React, { createContext, useEffect, ReactNode } from 'react';
+import {
+    checkCart,
+    addToCart,
+    getCart
+} from "@/utils/cartService";
+import productType from "@/interface/productInterface";
 
 interface FoodContextType {
+    addProductToCart: (product: productType) => Promise<void>;
 }
 
 export const FoodContext = createContext<FoodContextType | undefined>(undefined);
@@ -18,13 +22,16 @@ export function FoodProvider({ children }: AuthProviderProps) {
 
     }, []);
 
-    async function loadProducts(token: string) {
 
+    async function addProductToCart(product: productType) {
+        console.log("food adder reached with : ")
+        console.log(product);
+        await addToCart(product);
     }
 
 
     return (
-        <FoodContext.Provider value={{  }}>
+        <FoodContext.Provider value={{ addProductToCart }}>
             {children}
         </FoodContext.Provider>
     );
