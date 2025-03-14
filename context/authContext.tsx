@@ -121,10 +121,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (isWeb){
             localStorage.removeItem("userToken");
             localStorage.removeItem("structuredUserData")
+            localStorage.removeItem("profileId")
             localStorage.removeItem("userData")
         }else {
             await AsyncStorage.removeItem("userToken");
             await AsyncStorage.removeItem("structuredUserData")
+            await AsyncStorage.removeItem("profileId")
             await AsyncStorage.removeItem("userData")
         }
         setUserToken(null);

@@ -22,7 +22,7 @@ interface UserContextType {
     fetchAnyUserData: (token: string | null, path: string) => Promise<number | string | null>;
     fetchUserInfo: (token: string | null) => Promise<void>;
     addCalories: (token: string | null, calories: number) => Promise<void>;
-    editUserProfile: (token: string | null, profileId: string | null, structure: any) => Promise<void>;
+    editUserProfile: (token: string | null, structure: any) => Promise<void>;
     whipeout: () => Promise<void>;
 }
 
@@ -70,15 +70,14 @@ export function UserProvider({ children }: UserProviderProps) {
     };
 
 
-    const editUserProfile = useCallback(async (token: string | null, profileId: string | null, structure: any): Promise<void> => {
+    const editUserProfile = useCallback(async (token: string | null, structure: any): Promise<void> => {
         if (!token) return;
-        if (!profileId) return;
 
         setIsLoading(true);
         try {
             const response = await fetch(
-                `${baseUrl}/api/profile/edit/${profileId}`,{
-                    method: "PATCH",
+                `${baseUrl}/api/profile/edit`,{
+                    method: "POST",
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
@@ -95,7 +94,6 @@ export function UserProvider({ children }: UserProviderProps) {
 
     const fetchUserInfo = useCallback(async (token: string | null): Promise<void> => {
         if (!token) return;
-
         setIsLoading(true);
         try {
             const response = await fetch(`${baseUrl}/api/whoami`, {
@@ -110,11 +108,7 @@ export function UserProvider({ children }: UserProviderProps) {
                 logout();
                 return;
             }
-
             const data = await response.json();
-
-
-
             const user: structuredUserType = {
                 email: null,
                 password: null,
@@ -128,20 +122,20 @@ export function UserProvider({ children }: UserProviderProps) {
                 sportFrequecy: null
             };
 
-            if (data.email){user.email = data.email}
-            if (data.name){user.name = data.name}
-            if (data.surname){user.surname = data.surname}
-            if (data.phoneNumber){user.phoneNumber = data.phoneNumber}
-            if (data.gender){user.gender_id = data.gender.gender}
-            if (data.height){user.height = data.height}
-            if (data.weight){user.weight = data.weight}
-            if (data.birthDate){user.birthDate = data.birthDate}
-            if (data.sportFrequecy){user.sportFrequecy = data.sportFrequecy}
+            if (data.email){user.email = data.profile.email}
+            if (data.profile.name){user.name = data.profile.name}
+            if (data.profile.surname){user.surname = data.profile.surname}
+            if (data.profile.phoneNumber){user.phoneNumber = data.profile.phoneNumber}
+            if (data.profile.gender){user.gender_id = data.profile.gender.gender}
+            if (data.profile.height){user.height = data.profile.height}
+            if (data.profile.weight){user.weight = data.profile.weight}
+            if (data.profile.birthDate){user.birthDate = data.profile.birthDate}
+            if (data.profile.sportFrequecy){user.sportFrequecy = data.profile.sportFrequecy}
 
 
             await saveStructuredUser(user);
-            setUserProfileId(data.profile.id);
             setStructuredUserInfo(user);
+            console.log(user)
         } catch (error) {
             console.error("Erreur lors de la récupération des informations utilisateur:", error);
         } finally {

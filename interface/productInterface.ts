@@ -3,7 +3,7 @@ import restaurantType from "./restaurantInterface"
 
 export default interface productType {
     "id": number,
-    "ingredients": Array<ingredientType>[],
+    "ingredients": ingredientType[],
     "calories": number,
     "price": number,
     "name": string,

@@ -1,11 +1,8 @@
-import React, {createContext, useEffect, ReactNode, useCallback} from 'react';
-import {
-    checkCart,
-    addToCart,
-    getCart
-} from "@/utils/cartService";
+import React, {createContext, useEffect, ReactNode, useCallback, useState, useContext} from 'react';
+import {userRegistrationType} from "@/interface/userInterface";
 import productType from "@/interface/productInterface";
-import {baseUrl} from "@/constants/globalVariable";
+import {getProducts} from "@/utils/foodService";
+
 
 interface FoodContextType {
 }
@@ -17,10 +14,7 @@ interface AuthProviderProps {
 }
 
 export function FoodProvider({ children }: AuthProviderProps) {
-
-    useEffect(() => {
-
-    }, []);
+    const [products, setProducts] = useState<productType[] | null>();
 
 
 

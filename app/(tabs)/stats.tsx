@@ -70,14 +70,6 @@ export default function Profile() {
         }
 
         if (!isLoading) {
-            // if (!structuredUserInfo?.name) {
-            //     fetchUserInfo(userToken);
-            // }
-            // if (structuredUserInfo?.password) {
-            //     whipeout();
-            //     fetchUserInfo(userToken);
-            // }
-
             if (isFirstRender.current) {
                 retrieveUserCalories();
                 retrieveUserConsumedCalories();

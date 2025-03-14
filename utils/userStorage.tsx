@@ -35,7 +35,11 @@ export async function saveRegistrationInformation(user: userRegistrationType): P
 
 export async function saveStructuredUser(structuredUser: structuredUserType): Promise<void> {
     try{
-        await AsyncStorage.setItem(STRUCTURED_KEY, JSON.stringify(structuredUser));
+        if (isWeb){
+            localStorage.setItem(STRUCTURED_KEY, JSON.stringify(structuredUser));
+        }else{
+            await AsyncStorage.setItem(STRUCTURED_KEY, JSON.stringify(structuredUser));
+        }
     }catch(error){
         console.error("Erreur lors de l'enregistrement de l'utilisateur structuré :", error);
     }

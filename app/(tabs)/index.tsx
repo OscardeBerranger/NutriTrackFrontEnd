@@ -1,46 +1,30 @@
 import { ActivityIndicator, Button, Image, FlatList, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useCallback, useContext, useEffect, useState } from "react";
-import { AuthContext } from "@/context/authContext";
-import { HelloWave } from "@/components/HelloWave";
-import { useRouter } from "expo-router";
-import { UserContext } from "@/context/userContext";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-
+import {useContext, useEffect, useState} from "react";
+import {AuthContext} from "@/context/authContext";
+import {useRouter} from "expo-router";
 import productType from "@/interface/productInterface";
-import {baseUrl} from "@/constants/globalVariable";
-import {OrderContext} from "@/context/orderContext";
+import {getProducts} from "@/utils/foodService";
 import {CartItemType} from "@/interface/cartType";
 import {addToCart} from "@/utils/cartService";
 
 export default function PlatesPage() {
-  const auth = useContext(AuthContext);
-  const userInfo = useContext(UserContext);
-  const orderContext = useContext(OrderContext);
-  const [isRedirecting, setIsRedirecting] = useState<boolean>(false); // ✅ Empêche la boucle infinie
+  const authContext = useContext(AuthContext);
+  const [products, setProducts] = useState<productType[] | null>();
+  const [loadingDish, setLoadingDish] = useState<boolean>(true);
+
   const router = useRouter();
-  const [plates, setPlates] = useState<productType[]>([]); // Utilisation de `productType` directement
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  if (!auth || !userInfo || !orderContext) {
-    console.log("auth")
-    console.log(auth)
-    console.log("userInfo")
-    console.log(userInfo)
-    console.log("orderContext")
-    console.log(orderContext)
+  if (!authContext) {
     return (
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="title">Erreur : Contexte non défini !</ThemedText>
-          <HelloWave />
+        <ThemedView >
+          <ThemedText>
+            Error unable to load context
+          </ThemedText>
         </ThemedView>
-    );
+    )
   }
-
-  const { logout, userToken, isLoading: authLoading } = auth;
-  const { structuredUserInfo } = userInfo;
-
+  const { logout, userToken, isLoading: authLoading } = authContext;
 
   async function handleAddToCartClick(product: productType) {
     let cartItem: CartItemType = {
@@ -52,68 +36,26 @@ export default function PlatesPage() {
     await addToCart(cartItem);
   }
 
-  // Fonction pour récupérer les plats depuis l'API
-  const fetchPlates = useCallback(async () => {
-    try {
-      const response = await fetch(`${baseUrl}/api/product/all`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${userToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.status === 401){
-        setIsRedirecting(true)
-        await logout()
-        router.push("/registration/login")
-      }
-      const data = await response.json();
-
-      // Formatage des données selon l'interface `productType`
-      const formattedPlates: productType[] = data.map((plate: any) => ({
-        id: plate.id,
-        name: plate.name,
-        calories: plate.calories,
-        price: plate.price,
-        origin: plate.origin,
-        ingredients: plate.ingredients.map((ingredient: any) => ({
-          id: ingredient.id,
-          name: ingredient.name
-        })),
-        restaurant: {
-          id: plate.restaurant.id,
-          address: {
-            streetNumber: plate.restaurant.Address.streetNumber,
-            street: plate.restaurant.Address.street,
-            zipcode: plate.restaurant.Address.zipcode,
-            city: plate.restaurant.Address.city,
-            country: plate.restaurant.Address.country
-          }
-        }
-      }));
-      setPlates(formattedPlates);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Erreur lors de la récupération des plats:", error);
-      setIsLoading(false);
-    }
-  }, [userToken, isRedirecting]);
-
+  //Gère la redirection en cas de token missing
   useEffect(() => {
     if (!authLoading) {
       if (!userToken || userToken === "" || userToken === null) {
         router.push("/registration/login");
       }
-      fetchPlates();
+      if (userToken){
+        try {
+          getProducts(userToken)
+              .then(
+                  data=>{
+                    setProducts(data);
+                    setLoadingDish(false)
+                  }
+              )
+        }catch (err){console.log(err)}
+      }
     }
-  }, [authLoading, isRedirecting]);
+  }, [authLoading, userToken]);
 
-  if (isLoading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
-  }
-  
-
-  // Affichage d'un plat dans une carte
   const renderPlate = ({ item }: { item: productType }) => (
       <ThemedView style={styles.plateCard}>
         <ThemedText type="subtitle">{item.name}</ThemedText>
@@ -127,41 +69,36 @@ export default function PlatesPage() {
           handleAddToCartClick(item);
         }} />
       </ThemedView>
+
   );
 
-
-
   return (
-      <ParallaxScrollView
-          headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-          headerImage={
-            <Image source={require("@/assets/images/partial-react-logo.png")} style={styles.reactLogo} />
-          }
-      >
-        <Button title={"logout"} onPress={()=> {
-          logout()
-          router.push("/registration/login"); // ✅ Redirection immédiate après le logout
-        }} />
+      <ThemedView>
+        <ThemedText style={styles.text} >text</ThemedText>
+        <Button title={"Logout"} onPress={logout} />
         <Button title={"cart"} onPress={()=>{
           router.push("/cart/cart")
         }} />
-
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="title">Plats Disponibles</ThemedText>
-          <HelloWave />
-        </ThemedView>
-
-        <FlatList
-            data={plates}
-            renderItem={renderPlate}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.platesList}
-        />
-      </ParallaxScrollView>
+        <Button title={"Load products"} onPress={()=>{getProducts(userToken)}} />
+        {
+          loadingDish ? (<ActivityIndicator color={"white"}/> ) :
+              (
+                  <FlatList
+                      data={products}
+                      renderItem={renderPlate}
+                      keyExtractor={(item) => item.id.toString()}
+                      contentContainerStyle={styles.platesList}
+                  />
+              )
+        }
+      </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
+  text: {
+    color: "white"
+  },
   titleContainer: {
     flexDirection: "row",
     alignItems: "center",
