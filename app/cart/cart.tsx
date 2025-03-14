@@ -1,22 +1,55 @@
-import { useEffect, useState } from "react";
-import {StyleSheet, Text, FlatList, View, Button} from "react-native";
+import {useContext, useEffect, useState} from "react";
+import { StyleSheet, Text, FlatList, View, Button } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
-import {addToCart, getCart} from "@/utils/cartService";
+import {addToCart, getCart, getCartTotal, removeFromCart} from "@/utils/cartService";
 import CartType from "@/interface/cartType";
-import productType from "@/interface/productInterface";
+import {placeOrder} from "@/utils/OrderService";
+import {AuthContext} from "@/context/authContext";
+import {ThemedText} from "@/components/ThemedText";
+import {HelloWave} from "@/components/HelloWave";
 
 export default function Cart() {
+    const auth = useContext(AuthContext);
     const [cart, setCart] = useState<CartType | null>(null);
+    const [cartTotal, setCartTotal] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    if (!auth){
+        return (
+        <ThemedView style={styles.titleContainer}>
+            <ThemedText type="title">Erreur : Contexte non défini !</ThemedText>
+            <HelloWave />
+        </ThemedView>
+        )
+    }
+
+    const { userToken } = auth;
+
+
+    // Fonction pour récupérer le panier et le mettre à jour
+    const fetchCart = async () => {
+        const cartData = await getCart();
+        const cartPrice = await getCartTotal();
+        setCart(cartData);
+        setCartTotal(cartPrice);
+        setIsLoading(false);
+        getCartTotal()
+    };
 
     useEffect(() => {
-        const fetchCart = async () => {
-            const cartData = await getCart();
-            setCart(cartData);
-            setIsLoading(false);
-        };
         fetchCart();
     }, []);
+
+    // Ajoute au panier et met à jour le state
+    const handleAddToCart = async (product: any) => {
+        await addToCart(product);
+        await fetchCart(); // Recharge le panier après l'ajout
+    };
+
+    const handleRemoveFromCart = async (product: any) => {
+        await removeFromCart(product);
+        await fetchCart(); // Recharge le panier après l'ajout
+    };
+
 
 
     if (isLoading) {
@@ -30,21 +63,27 @@ export default function Cart() {
     return (
         <ThemedView style={styles.container}>
             <Text style={styles.title}>Votre Panier</Text>
-            {cart && Object.keys(cart).length > 1 ? (
-                <FlatList
-                    data={Object.values(cart.products).flat()}
-                    keyExtractor={(item) => item.productId}
-                    renderItem={({ item }) => (
-                        <View style={styles.item}>
-                            <Text> {item.productId} </Text>
-                            <Text style={styles.text}>{item.productName} - {item.quantity}x</Text>
-                            <Text style={styles.text}>{item.productPrice}€</Text>
-                            <Button title={"+"} onPress={()=>{
-                                // addToCart(item)
-                            }} />
-                        </View>
-                    )}
-                />
+            {cart && cart.products && Object.keys(cart.products).length > 0 ? (
+                    <ThemedView style={styles.container}>
+                        <Text style={styles.text}>Prix : {cartTotal} €</Text>
+                        <FlatList
+                            data={Object.values(cart.products).flat()}
+                            keyExtractor={(item) => item.productId.toString()}
+                            renderItem={({ item }) => (
+                                <View style={styles.item}>
+                                    <Text style={styles.text}>{item.productName} - {item.quantity}x</Text>
+                                    <Text style={styles.text}>{item.productPrice}€</Text>
+                                    <Button title={"+"} onPress={() => handleAddToCart(item)} />
+                                    <Button title={"-"} onPress={() => handleRemoveFromCart(item)} />
+                                </View>
+                            )}
+                        />
+                        <Button title={"Valider la commande"} onPress={()=>{
+                            placeOrder(cart.products, userToken)
+                                .then(result => {fetchCart()})
+                        }} />
+                    </ThemedView>
+
             ) : (
                 <Text style={styles.text}>Votre panier est vide.</Text>
             )}
@@ -57,4 +96,10 @@ const styles = StyleSheet.create({
     title: { fontSize: 20, fontWeight: "bold", color: "white", marginBottom: 10 },
     item: { flexDirection: "row", justifyContent: "space-between", padding: 10, borderBottomWidth: 1, borderBottomColor: "#ddd" },
     text: { color: "white" },
+    titleContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 20,
+    },
 });

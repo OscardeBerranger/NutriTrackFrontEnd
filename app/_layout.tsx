@@ -9,6 +9,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import {AuthProvider} from "@/context/authContext";
 import {UserProvider} from "@/context/userContext";
 import {FoodProvider} from "@/context/foodContext";
+import {OrderProvider} from "@/context/orderContext";
 
 // Prevent the splash screens from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,18 +32,20 @@ export default function RootLayout() {
   }
 
   return (
-      <FoodProvider>
-        <AuthProvider>
-          <UserProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="+not-found" />
-              </Stack>
-              <StatusBar style="auto" />
-            </ThemeProvider>
-          </UserProvider>
-        </AuthProvider>
-      </FoodProvider>
+      <OrderProvider>
+        <FoodProvider>
+          <AuthProvider>
+            <UserProvider>
+              <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <Stack>
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="+not-found" />
+                </Stack>
+                <StatusBar style="auto" />
+              </ThemeProvider>
+            </UserProvider>
+          </AuthProvider>
+        </FoodProvider>
+      </OrderProvider>
   );
 }

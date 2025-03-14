@@ -10,20 +10,26 @@ import ParallaxScrollView from "@/components/ParallaxScrollView";
 
 import productType from "@/interface/productInterface";
 import {baseUrl} from "@/constants/globalVariable";
-import {FoodContext} from "@/context/foodContext";
-import ingredientType from "@/interface/ingredientInterface";
+import {OrderContext} from "@/context/orderContext";
+import {CartItemType} from "@/interface/cartType";
+import {addToCart} from "@/utils/cartService";
 
 export default function PlatesPage() {
   const auth = useContext(AuthContext);
   const userInfo = useContext(UserContext);
-  const foodContext = useContext(FoodContext);
+  const orderContext = useContext(OrderContext);
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false); // ✅ Empêche la boucle infinie
   const router = useRouter();
-
   const [plates, setPlates] = useState<productType[]>([]); // Utilisation de `productType` directement
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  if (!auth || !userInfo || !foodContext) {
+  if (!auth || !userInfo || !orderContext) {
+    console.log("auth")
+    console.log(auth)
+    console.log("userInfo")
+    console.log(userInfo)
+    console.log("orderContext")
+    console.log(orderContext)
     return (
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Erreur : Contexte non défini !</ThemedText>
@@ -33,12 +39,17 @@ export default function PlatesPage() {
   }
 
   const { logout, userToken, isLoading: authLoading } = auth;
-  const { addProductToCart } = foodContext;
   const { structuredUserInfo } = userInfo;
 
 
   async function handleAddToCartClick(product: productType) {
-    await addProductToCart(product);
+    let cartItem: CartItemType = {
+      productId: product.id.toString(),
+      productName: product.name,
+      productPrice: product.price,
+      quantity: 1
+    }
+    await addToCart(cartItem);
   }
 
   // Fonction pour récupérer les plats depuis l'API
@@ -112,7 +123,9 @@ export default function PlatesPage() {
         <ThemedText>Calories: {item.calories}</ThemedText>
         <ThemedText>Price: ${item.price}</ThemedText>
         <ThemedText>Ingredients: {item.ingredients.map(i => i.name).join(", ")}</ThemedText>
-        <Button title="Ajouter aux repas" onPress={() => handleAddToCartClick(item)} />
+        <Button title={"Add " + item.name + "to cart"} onPress={()=>{
+          handleAddToCartClick(item);
+        }} />
       </ThemedView>
   );
 
@@ -125,7 +138,10 @@ export default function PlatesPage() {
             <Image source={require("@/assets/images/partial-react-logo.png")} style={styles.reactLogo} />
           }
       >
-        <Button title={"logout"} onPress={logout} />
+        <Button title={"logout"} onPress={()=> {
+          logout()
+          router.push("/registration/login"); // ✅ Redirection immédiate après le logout
+        }} />
         <Button title={"cart"} onPress={()=>{
           router.push("/cart/cart")
         }} />

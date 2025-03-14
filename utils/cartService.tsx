@@ -67,28 +67,58 @@ export const getCart = async (): Promise<CartType | null> => {
     }
 };
 
-export async function addToCart(product: productType) {
-    console.log("Add to cart service reached with : ")
-    console.log(product)
+export async function addToCart(product: CartItemType) {
     await checkCart()
     const cart: CartType | null = await getCart()
     if (!cart) {
         return null
     }
-
-    if (cart.products[product.id]) {
-        console.log(cart)
-        cart.products[product.id].quantity++;
-    }else {
-        console.log("Cart product don't exist")
-        cart.products[product.id] = {
-            "productId": product.id.toString(),
-            "productName": product.name,
-            "productPrice": product.price,
-            "quantity": 1
-        }
-        console.log(cart)
+    if (cart.products[product.productId]) {
+        cart.products[product.productId].quantity++;
+    }else{
+        cart.products[product.productId] = product
     }
+
     await setCart(cart);
     return cart;
+}
+
+export async function removeFromCart(product: CartItemType) {
+    await checkCart()
+    const cart: CartType | null = await getCart()
+    if (!cart) {
+        return null
+    }
+    if(cart.products[product.productId].quantity - 1 === 0) {
+        console.log("Have to be removed")
+        delete cart.products[product.productId]
+    }
+    if (cart.products[product.productId]) {
+        cart.products[product.productId].quantity--;
+    }
+
+    await setCart(cart);
+    return cart;
+}
+
+export async function removeCart(){
+    if(isWeb){
+        localStorage.removeItem(CART_KEY);
+    }else {
+        await AsyncStorage.removeItem(CART_KEY);
+    }
+    await checkCart()
+}
+
+export async function getCartTotal(): Promise<number | null>{
+    await checkCart()
+    let returnablePrice = 0
+    const cart: CartType | null = await getCart()
+    if (!cart) {
+        return 0
+    }
+    Object.entries(cart.products).forEach(([key, value]) => {
+        returnablePrice+=value.productPrice * value.quantity
+    })
+    return returnablePrice
 }

@@ -8,7 +8,6 @@ import productType from "@/interface/productInterface";
 import {baseUrl} from "@/constants/globalVariable";
 
 interface FoodContextType {
-    addProductToCart: (product: productType) => Promise<void>;
 }
 
 export const FoodContext = createContext<FoodContextType | undefined>(undefined);
@@ -24,15 +23,11 @@ export function FoodProvider({ children }: AuthProviderProps) {
     }, []);
 
 
-    async function addProductToCart(product: productType) {
-        console.log("food adder reached with : ")
-        console.log(product);
-        await addToCart(product);
-    }
+
 
 
     return (
-        <FoodContext.Provider value={{ addProductToCart }}>
+        <FoodContext.Provider value={{  }}>
             {children}
         </FoodContext.Provider>
     );
