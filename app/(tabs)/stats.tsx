@@ -66,7 +66,7 @@ export default function Profile() {
 
     useEffect(() => {
         if (!isLoading && !userToken) {
-            router.push("@/registration/login");
+            router.push("/registration/login");
         }
 
         if (!isLoading) {

@@ -17,6 +17,7 @@ export default function PlatesPage() {
   const auth = useContext(AuthContext);
   const userInfo = useContext(UserContext);
   const foodContext = useContext(FoodContext);
+  const [isRedirecting, setIsRedirecting] = useState<boolean>(false); // ✅ Empêche la boucle infinie
   const router = useRouter();
 
   const [plates, setPlates] = useState<productType[]>([]); // Utilisation de `productType` directement
@@ -51,6 +52,8 @@ export default function PlatesPage() {
         },
       });
       if (response.status === 401){
+        setIsRedirecting(true)
+        await logout()
         router.push("/registration/login")
       }
       const data = await response.json();
@@ -77,14 +80,13 @@ export default function PlatesPage() {
           }
         }
       }));
-      console.log(formattedPlates);
       setPlates(formattedPlates);
       setIsLoading(false);
     } catch (error) {
       console.error("Erreur lors de la récupération des plats:", error);
       setIsLoading(false);
     }
-  }, [userToken]);
+  }, [userToken, isRedirecting]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -93,7 +95,7 @@ export default function PlatesPage() {
       }
       fetchPlates();
     }
-  }, [authLoading, fetchPlates]);
+  }, [authLoading, isRedirecting]);
 
   if (isLoading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
@@ -103,7 +105,6 @@ export default function PlatesPage() {
   // Affichage d'un plat dans une carte
   const renderPlate = ({ item }: { item: productType }) => (
       <ThemedView style={styles.plateCard}>
-        <Button title={"logout"} onPress={logout} />
         <ThemedText type="subtitle">{item.name}</ThemedText>
         <ThemedText>{item.origin}</ThemedText>
         <ThemedText>Restaurant</ThemedText>
@@ -124,6 +125,11 @@ export default function PlatesPage() {
             <Image source={require("@/assets/images/partial-react-logo.png")} style={styles.reactLogo} />
           }
       >
+        <Button title={"logout"} onPress={logout} />
+        <Button title={"cart"} onPress={()=>{
+          router.push("/cart/cart")
+        }} />
+
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Plats Disponibles</ThemedText>
           <HelloWave />

@@ -1,89 +1,110 @@
-import {useState, useContext} from "react";
-import { StyleSheet, Text, TextInput, Button, Alert } from 'react-native';
-import {ThemedView} from "@/components/ThemedView";
-import {AuthContext} from "@/context/authContext";
-import {UserContext} from "@/context/userContext";
-import {useRouter} from "expo-router";
+import { useState, useContext, useEffect } from "react";
+import { StyleSheet, Text, TextInput, Button, ActivityIndicator } from "react-native";
+import { ThemedView } from "@/components/ThemedView";
+import { AuthContext } from "@/context/authContext";
+import { UserContext } from "@/context/userContext";
+import { useRouter } from "expo-router";
 
 export default function Profile() {
     const auth = useContext(AuthContext);
     const userContext = useContext(UserContext);
-    const [weight, setWeight] = useState("");
-    const [height, setHeight] = useState("");
-    const [sportfrequency, setSportfrequency] = useState("");
-    const [gender, setGender] = useState("");
-    const [birthDate, setBithDate] = useState("2003/12/17");
     const router = useRouter();
-    if (!auth || !userContext) {
-        return null
-    }
 
+    if (!auth || !userContext) return null;
 
+    const { editUserProfile, whipeout, fetchUserInfo,userProfileId , structuredUserInfo, isLoading } = userContext;
+    const { userToken } = auth;
 
-    const { userRegistrationInfo } = userContext;
-    const { register , userToken} = auth;
-    const { userProfileId } = auth
+    const [formData, setFormData] = useState({
+        name: "",
+        surName: "",
+        weight: "",
+        height: "",
+        sportfrequency: "",
+        gender: "",
+        birthDate: "",
+    });
 
-    async function handleRegistration(){
-        if (!userToken || !userProfileId) {
-            //router.navigate("/registration/login");
+    const handleChange = (key: string, value: string) => {
+        setFormData((prev) => ({ ...prev, [key]: value }));
+    };
+
+    useEffect(() => {
+        if (!structuredUserInfo && userToken) {
+            fetchUserInfo(userToken);
+
+        }
+        else console.log(structuredUserInfo);
+    }, [structuredUserInfo, userToken]);
+
+    useEffect(() => {
+        if (structuredUserInfo) {
+            setFormData({
+                name: structuredUserInfo.name || "",
+                surName: structuredUserInfo.surname || "",
+                weight: structuredUserInfo.weight?.toString() || "",
+                height: structuredUserInfo.height?.toString() || "",
+                sportfrequency: structuredUserInfo.sportFrequecy?.toString() || "",
+                gender: structuredUserInfo.gender_id?.toString() || "",
+                birthDate: structuredUserInfo.birthDate?.toString() || "",
+            });
+        }
+    }, [structuredUserInfo]);
+
+    async function handleInformationRegistration() {
+        if (!userToken) {
+            router.navigate("/registration/login");
             return;
         }
 
+        const updatedData = Object.entries(formData).reduce((acc, [key, value]) => {
+            if (value) acc[key] = value;
+            return acc;
+        }, {} as Record<string, string | number>);
+
+        await editUserProfile(userToken,userProfileId , updatedData)
+        await whipeout()
     }
 
-    console.log("Passed here at last")
+    if (isLoading) {
+        return <ActivityIndicator size="large" color="#0000ff" />;
+    }
 
     return (
-        <ThemedView style={styles.titleContainer}>
+        <ThemedView style={styles.container}>
+            <Text style={styles.text}>{structuredUserInfo?.email || "Error loading user"}</Text>
 
-            <Text style={styles.text} >Poid :</Text>
-            <TextInput style={styles.input} value={weight} onChangeText={setWeight} />
+            {Object.keys(formData).map((key) => (
+                <ThemedView key={key}>
+                    <Text style={styles.text}>{key} :</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={formData[key as keyof typeof formData]}
+                        placeholder="Entrer une valeur"
+                        onChangeText={(value) => handleChange(key, value)}
+                    />
+                </ThemedView>
+            ))}
 
-            <Text style={styles.text} >Taille :</Text>
-            <TextInput style={styles.input} value={height} onChangeText={setHeight} />
-
-            <Text style={styles.text} >Fréquence de sport :</Text>
-            <TextInput style={styles.input} value={sportfrequency} onChangeText={setSportfrequency} />
-
-            <Text style={styles.text} >Genre (1 homme, 2femme)</Text>
-            <TextInput style={styles.input} value={gender} onChangeText={setGender} />
-
-            <Text style={styles.text} >Date de naissance</Text>
-            <TextInput style={styles.input} value={birthDate} onChangeText={setBithDate} />
-
-            <Button title={"s'enregistrer" } onPress={handleRegistration} />
+            <Button title="Enregistrer les informations" onPress={handleInformationRegistration} />
         </ThemedView>
-
     );
 }
 
 const styles = StyleSheet.create({
-    headerImage: {
-        color: '#808080',
-        bottom: -90,
-        left: -35,
-        position: 'absolute',
-    },
-    titleContainer: {
-        flexDirection: 'row',
-        gap: 8,
-        color: "white",
-    },
     container: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: "center",
         padding: 20,
-        backgroundColor: '#ffffff',
     },
     input: {
         borderWidth: 1,
         padding: 10,
         marginVertical: 5,
         borderRadius: 5,
-        backgroundColor: '#ffffff'
+        backgroundColor: "#ffffff",
     },
     text: {
-        color: "white"
-    }
+        color: "white",
+    },
 });

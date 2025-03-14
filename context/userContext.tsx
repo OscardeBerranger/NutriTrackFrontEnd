@@ -22,6 +22,7 @@ interface UserContextType {
     fetchAnyUserData: (token: string | null, path: string) => Promise<number | string | null>;
     fetchUserInfo: (token: string | null) => Promise<void>;
     addCalories: (token: string | null, calories: number) => Promise<void>;
+    editUserProfile: (token: string | null, profileId: string | null, structure: any) => Promise<void>;
     whipeout: () => Promise<void>;
 }
 
@@ -69,6 +70,29 @@ export function UserProvider({ children }: UserProviderProps) {
     };
 
 
+    const editUserProfile = useCallback(async (token: string | null, profileId: string | null, structure: any): Promise<void> => {
+        if (!token) return;
+        if (!profileId) return;
+
+        setIsLoading(true);
+        try {
+            const response = await fetch(
+                `${baseUrl}/api/profile/edit/${profileId}`,{
+                    method: "PATCH",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(structure),
+                }
+            )
+        }catch (error) {console.log(error)}
+        finally {
+            setIsLoading(false);
+        }
+    }, [logout])
+
+
     const fetchUserInfo = useCallback(async (token: string | null): Promise<void> => {
         if (!token) return;
 
@@ -89,20 +113,34 @@ export function UserProvider({ children }: UserProviderProps) {
 
             const data = await response.json();
 
+
+
             const user: structuredUserType = {
-                email: data.email,
+                email: null,
                 password: null,
-                name: data.profile.name,
-                surname: data.profile.surname,
-                phoneNumber: data.profile.phoneNumber,
-                gender_id: data.profile.gender.gender,
-                height: data.profile.height,
-                weight: data.profile.weight,
-                birthDate: data.profile.birthDate,
-                sportFrequecy: data.profile.sportFrequecy
+                name: null,
+                surname: null,
+                phoneNumber: null,
+                gender_id: null,
+                height: null,
+                weight: null,
+                birthDate: null,
+                sportFrequecy: null
             };
 
+            if (data.email){user.email = data.email}
+            if (data.name){user.name = data.name}
+            if (data.surname){user.surname = data.surname}
+            if (data.phoneNumber){user.phoneNumber = data.phoneNumber}
+            if (data.gender){user.gender_id = data.gender.gender}
+            if (data.height){user.height = data.height}
+            if (data.weight){user.weight = data.weight}
+            if (data.birthDate){user.birthDate = data.birthDate}
+            if (data.sportFrequecy){user.sportFrequecy = data.sportFrequecy}
+
+
             await saveStructuredUser(user);
+            setUserProfileId(data.profile.id);
             setStructuredUserInfo(user);
         } catch (error) {
             console.error("Erreur lors de la récupération des informations utilisateur:", error);
@@ -205,7 +243,8 @@ export function UserProvider({ children }: UserProviderProps) {
             saveUserRegistrationInfo,
             whipeout,
             isLoading,
-            userProfileId
+            userProfileId,
+            editUserProfile
         }}>
             {children}
         </UserContext.Provider>

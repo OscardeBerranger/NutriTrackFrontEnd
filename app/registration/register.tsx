@@ -45,15 +45,11 @@ export default function registerPage() {
         if (user.email !== null && user.password !== null) {
             register(user)
                 .then(res=>{
-                    console.log("test")
-                    console.log(user)
-
                     if (!user.email || !user.password){
-                    console.log(user)
                         return null
                     }
                     login(user.email, user.password)
-                    router.push('/profile/edit')
+                    router.push('/profile')
                 })
 
         }

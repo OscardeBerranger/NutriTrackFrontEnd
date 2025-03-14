@@ -107,7 +107,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 }else {
                     AsyncStorage.setItem("profileId", data.profile.id);
                 }
-                setUserProfileId(data.profile.id)
             }
             else {
                 throw new Error(data.message || 'Échec de connexion');

@@ -1,10 +1,11 @@
-import React, { createContext, useEffect, ReactNode } from 'react';
+import React, {createContext, useEffect, ReactNode, useCallback} from 'react';
 import {
     checkCart,
     addToCart,
     getCart
 } from "@/utils/cartService";
 import productType from "@/interface/productInterface";
+import {baseUrl} from "@/constants/globalVariable";
 
 interface FoodContextType {
     addProductToCart: (product: productType) => Promise<void>;
